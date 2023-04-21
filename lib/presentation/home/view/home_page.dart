@@ -1,6 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:get/get_rx/src/rx_workers/utils/debouncer.dart';
 import 'package:the_cats_app/infraestructure/apis/apis.dart';
 import 'package:the_cats_app/presentation/description/view/description_cat.dart';
 import 'package:the_cats_app/presentation/home/view_model/home_vm.dart';
@@ -17,29 +18,61 @@ class _HomePageState extends State<HomePage> {
   final HomeViewModel homeViewModel = Get.isRegistered<HomeViewModel>()
       ? Get.find<HomeViewModel>()
       : Get.put(HomeViewModel());
+
+  final Debouncer debouncer =
+      Debouncer(delay: const Duration(milliseconds: 800));
+
+  ScrollController scrollController = ScrollController(
+    initialScrollOffset: 0.0,
+    keepScrollOffset: true,
+  );
   @override
   void initState() {
-    homeViewModel.getCats();
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) async {
+      await homeViewModel.getCats();
+      homeViewModel.auxCats = RxList.from(homeViewModel.allCatsList);
+      setState(() {});
+    });
+
     super.initState();
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-        appBar: AppBar(
-          title: const Text('Cat Breeds'),
-          centerTitle: true,
-          backgroundColor: Colors.brown,
-        ),
-        body: Obx(
-          () => RawScrollbar(
-             crossAxisMargin: 0,
-             mainAxisMargin: 10,
-             
-             
-              thumbColor: Colors.brown,
-              scrollbarOrientation: ScrollbarOrientation.right,
-              thumbVisibility: true,
+    return Obx(() => Scaffold(
+          appBar: AppBar(
+            title: const Text('Cat Breeds'),
+            centerTitle: true,
+            backgroundColor: Colors.brown,
+            actions: [
+              homeViewModel.typeTheme.value == 1
+                  ? Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: GestureDetector(
+                          onTap: () {
+                            homeViewModel.typeTheme.value = 2;
+                            Get.changeTheme(ThemeData.dark());
+                          },
+                          child: const Icon(Icons.dark_mode)),
+                    )
+                  : Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: GestureDetector(
+                          onTap: () {
+                            homeViewModel.typeTheme.value = 1;
+                            Get.changeTheme(ThemeData.light());
+                          },
+                          child: const Icon(Icons.light_mode)),
+                    )
+            ],
+          ),
+          body: RawScrollbar(
+            crossAxisMargin: 5,
+            mainAxisMargin: Get.height * .12,
+            minThumbLength: Get.height * .2,
+            thumbColor: Colors.brown,
+            scrollbarOrientation: ScrollbarOrientation.right,
+            thumbVisibility: true,
             child: SingleChildScrollView(
               child: Column(
                 children: [
@@ -47,32 +80,40 @@ class _HomePageState extends State<HomePage> {
                   Padding(
                       padding: const EdgeInsets.all(8.0),
                       child: TextField(
+                          onChanged: (value) {
+                            debouncer(() => {
+                                  homeViewModel.filterSearchResults(),
+                                  setState(() {})
+                                });
+                          },
+                          controller: homeViewModel.controllerSearch,
                           decoration: InputDecoration(
-                        suffixIcon: const Icon(Icons.search, color: Colors.brown),
-                        labelStyle: const TextStyle(
-                            color: Colors.brown,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 20),
-                        labelText: "Search Breed",
-                        fillColor: Colors.white,
-                        focusedBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(15.0),
-                          borderSide: const BorderSide(
-                            color: Colors.brown,
-                          ),
-                        ),
-                        enabledBorder: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(15.0),
-                          borderSide: const BorderSide(
-                            color: Colors.brown,
-                            width: 2.0,
-                          ),
-                        ),
-                      ))),
+                            suffixIcon:
+                                const Icon(Icons.search, color: Colors.brown),
+                            labelStyle: const TextStyle(
+                                color: Colors.brown,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 20),
+                            labelText: "Search Breed",
+                            fillColor: Colors.white,
+                            focusedBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(15.0),
+                              borderSide: const BorderSide(
+                                color: Colors.brown,
+                              ),
+                            ),
+                            enabledBorder: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(15.0),
+                              borderSide: const BorderSide(
+                                color: Colors.brown,
+                                width: 2.0,
+                              ),
+                            ),
+                          ))),
                   ListView.builder(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
-                    itemCount: homeViewModel.allCatsList.length,
+                    itemCount: homeViewModel.auxCats.length,
                     itemBuilder: (BuildContext context, int index) {
                       return Padding(
                         padding: const EdgeInsets.all(25.0),
@@ -80,11 +121,13 @@ class _HomePageState extends State<HomePage> {
                           padding: const EdgeInsets.all(20),
                           decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(20),
-                              border: Border.all(width: 2, color: Colors.brown)),
+                              border:
+                                  Border.all(width: 2, color: Colors.brown)),
                           child: Column(
                             children: [
                               Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceAround,
                                 children: [
                                   const Text(
                                     'Name breed: ',
@@ -94,7 +137,7 @@ class _HomePageState extends State<HomePage> {
                                     ),
                                   ),
                                   Text(
-                                    homeViewModel.allCatsList[index].name!,
+                                    homeViewModel.auxCats[index].name!,
                                     style: const TextStyle(
                                       fontSize: 16,
                                       fontWeight: FontWeight.bold,
@@ -103,14 +146,25 @@ class _HomePageState extends State<HomePage> {
                                 ],
                               ),
                               const SizedBox(height: 20),
-                              CachedNetworkImage(
-                                  errorWidget: (context, url, error) =>
-                                      Image.asset(Res.images.catNotFound),
-                                  imageUrl:
-                                      '${Apis.imageCat}${homeViewModel.allCatsList[index].referenceImageId}.jpg'),
+                              SizedBox(
+                                width: Get.width,
+                                height: Get.height * .45,
+                                child: CachedNetworkImage(
+                                    errorWidget: (context, url, error) =>
+                                        CachedNetworkImage(
+                                            imageUrl:
+                                                '${Apis.imageCat}${homeViewModel.auxCats[index].referenceImageId}.png',
+                                            errorWidget: (context, url,
+                                                    error) =>
+                                                Image.asset(
+                                                    Res.images.catNotFound)),
+                                    imageUrl:
+                                        '${Apis.imageCat}${homeViewModel.auxCats[index].referenceImageId}.jpg'),
+                              ),
                               const SizedBox(height: 20),
                               Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceAround,
                                 children: [
                                   Column(
                                     children: [
@@ -122,8 +176,7 @@ class _HomePageState extends State<HomePage> {
                                         ),
                                       ),
                                       const SizedBox(height: 10),
-                                      Text(homeViewModel
-                                          .allCatsList[index].origin!)
+                                      Text(homeViewModel.auxCats[index].origin!)
                                     ],
                                   ),
                                   Column(
@@ -137,7 +190,7 @@ class _HomePageState extends State<HomePage> {
                                       ),
                                       const SizedBox(height: 10),
                                       Text(homeViewModel
-                                          .allCatsList[index].intelligence
+                                          .auxCats[index].intelligence
                                           .toString())
                                     ],
                                   )
@@ -145,8 +198,8 @@ class _HomePageState extends State<HomePage> {
                               ),
                               const SizedBox(height: 5),
                               GestureDetector(
-                                onTap: () => Get.to(DescriptionCatPage(
-                                    cat: homeViewModel.allCatsList[index])),
+                                onTap: () => Get.to(() => DescriptionCatPage(
+                                    cat: homeViewModel.auxCats[index])),
                                 child: const Text(
                                   'View more',
                                   style: TextStyle(

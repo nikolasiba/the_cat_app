@@ -43,6 +43,7 @@ dependencies:
   http: ^0.13.5
   either_dart: ^0.3.0
   cached_network_image: ^3.2.3
+  carousel_slider: ^4.2.1
 
 dev_dependencies:
   flutter_test:
@@ -57,11 +58,11 @@ dev_dependencies:
   flutter_native_splash: ^2.2.19
 
 flutter_native_splash:
-  background_image: res\images\splash_app.png
+  background_image: res\images\splash_app.jpg
 
   android_12: null
-  background_image_android: res\images\splash_app.png
-  background_image_dark_android: res\images\splash_app.png
+  background_image_android: res\images\splash_app.jpg
+  background_image_dark_android: res\images\splash_app.jpg
 
 
 

@@ -1,7 +1,9 @@
 
 
 
-import 'package:the_cats_app/domain/model/the_cat.dart';
+
+
+import 'package:the_cats_app/domain/home/model/the_cat.dart';
 
 abstract class IHome {
   

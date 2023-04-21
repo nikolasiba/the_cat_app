@@ -1,6 +1,4 @@
 import 'dart:convert';
-import 'dart:io';
-
 import 'package:either_dart/either.dart';
 import 'package:get/get.dart';
 import 'package:http/http.dart' as http;
@@ -10,10 +8,10 @@ import 'package:the_cats_app/infraestructure/data/remote/network/base_api_servic
 class NetworkApiService extends BaseApiService {
   static const int timeOutseconds = 180;
 
-
   @override
-  Future<Either<NetworkException, dynamic>> getResponse(String url) async {
-    final response = await http.get(Uri.parse(url));
+  Future<Either<NetworkException, dynamic>> getResponse(String url,
+      {Map<String, String> headers = const {}}) async {
+    final response = await http.get(Uri.parse(url), headers: {});
     return returnResponse(response, true);
   }
 
@@ -27,8 +25,6 @@ class NetworkApiService extends BaseApiService {
 
     return (returnResponse(response, true));
   }
-
-  
 
   Either<NetworkException, dynamic> returnResponse(
       http.Response response, bool isJson) {
