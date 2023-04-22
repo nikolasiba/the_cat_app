@@ -56,7 +56,7 @@ class _DescriptionCatPageState extends State<DescriptionCatPage> {
                         aspectRatio: 1,
                         viewportFraction: 1,
                         autoPlayInterval: const Duration(seconds: 5),
-                        autoPlayAnimationDuration: Duration(milliseconds: 800),
+                        autoPlayAnimationDuration: const Duration(milliseconds: 800),
                         enlargeCenterPage: true,
                         autoPlayCurve: Curves.fastOutSlowIn,
                         onPageChanged: (index, reason) {
@@ -71,9 +71,9 @@ class _DescriptionCatPageState extends State<DescriptionCatPage> {
                               borderRadius: BorderRadius.circular(10.0),
                               child: CachedNetworkImage(
                                   imageUrl: '${item.url}',
-                                  // 'http://66.33.94.204/SyncEmart/Imgs/7037/banners/${item.link}.png',
+                                  
                                   placeholder: (context, url) =>
-                                      const CircularProgressIndicator(),
+                                      Image.asset(Res.images.catLoading),
                                   errorWidget: (context, url, error) =>
                                       Image.asset(Res.images.catNotFound),
                                   fit: BoxFit.fill),

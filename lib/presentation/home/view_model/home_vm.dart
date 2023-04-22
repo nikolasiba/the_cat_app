@@ -19,6 +19,14 @@ class HomeViewModel extends GetxController {
   }
 
   void filterSearchResults() {
+    // auxBranch.value = [];
+    //   for (var i = 0; i < model.branchs!.length; i++) {
+    //     if (model.branchs![i].businessName!
+    //         .toLowerCase()
+    //         .contains(controllerSearch.text.toLowerCase())) {
+    //       auxBranch.add(model.branchs![i]);
+    //     }
+    //   }
     if (controllerSearch.text == '') {
       auxCats = RxList.from(allCatsList);
     } else {

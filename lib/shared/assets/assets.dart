@@ -8,7 +8,10 @@ class Res {
 class ResImages {
   ResImages._();
 
-final catNotFound = 'res/images/catfound.png';}
+final catNotFound = 'res/images/catfound.png';
+final catLoading = 'res/images/loading_cat.gif';
+
+}
 
 class _ResIcons {
   _ResIcons._();
